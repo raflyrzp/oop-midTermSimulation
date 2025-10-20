@@ -6,35 +6,16 @@
 #include <iostream>
 #include <fstream>
 
-// Boost.Serialization
-#include <boost/serialization/access.hpp>
-#include <boost/archive/text_oarchive.hpp>
-#include <boost/archive/text_iarchive.hpp>
-#include <boost/serialization/string.hpp>
-#include <boost/serialization/vector.hpp>
-
 using namespace std;
 
 class User
 {
 private:
-    friend class boost::serialization::access;
-
     int id;
     string name;
     string phone;
     int loginState;
     vector<User> contact;
-
-    template <class Archive>
-    void serialize(Archive &ar, const unsigned int /*version*/)
-    {
-        ar & id;
-        ar & name;
-        ar & phone;
-        ar & loginState;
-        ar & contact;
-    }
 
     bool checkExistingContact(const string &phoneNumber) const
     {
@@ -64,6 +45,7 @@ public:
     User(string inputName, string inputPhone) : id(0), name(std::move(inputName)), phone(std::move(inputPhone)), loginState(0) {}
 
     // getter
+    int getId() const { return id; }
     string getName() const { return name; }
     string getPhone() const { return phone; }
     int getLoginState() const { return loginState; }
@@ -164,33 +146,85 @@ public:
         cout << "Contact not found." << endl;
     }
 
-    // Use Boost.Serialization to save/load
-    void saveToFile(const string &filename) const
+    void deleteContact(int contactId)
     {
-        ofstream ofs(filename);
-        if (!ofs)
+        for (auto it = contact.begin(); it != contact.end();)
         {
-            cerr << "Failed to open file for serialization: " << filename << endl;
-            return;
+            if (it->id == contactId)
+            {
+                it = contact.erase(it);
+                cout << "Contact deleted successfully!" << endl;
+                return;
+            }
+            else
+            {
+                it++;
+            }
         }
-        boost::archive::text_oarchive oa(ofs);
-        oa << *this;
-        cout << "Object serialized to " << filename << endl;
+        cout << "Contact not found." << endl;
     }
 
+     // ========== SAVE TO FILE ==========
+    void saveToFile(const string &filename) const
+    {
+        ofstream file(filename);
+        if (!file) {
+            cerr << "Error opening file for writing!\n";
+            return;
+        }
+
+        // Save main user data
+        file << id << "|" << name << "|" << phone << "|" << loginState << "\n";
+
+        // Save number of contacts
+        file << contact.size() << "\n";
+
+        // Save each contact
+        for (const auto &c : contact) {
+            file << c.id << "|" << c.name << "|" << c.phone << "\n";
+        }
+
+        cout << "Data saved to " << filename << endl;
+    }
+
+    // ========== LOAD FROM FILE ==========
     static User loadFromFile(const string &filename)
     {
-        ifstream ifs(filename);
-        if (!ifs)
-        {
-            cerr << "Error: Failed to open file for reading: " << filename << endl;
+        ifstream file(filename);
+        if (!file) {
+            cerr << "Error opening file for reading!\n";
             return User();
         }
-        boost::archive::text_iarchive ia(ifs);
-        User obj;
-        ia >> obj;
-        cout << "Object deserialized from " << filename << endl;
-        return obj;
+
+        User u;
+        string line;
+        int contactCount;
+
+        // 1. Load main user data
+        getline(file, line);
+        sscanf(line.c_str(), "%d|%[^|]|%[^|]|%d", &u.id, u.name.data(), u.phone.data(), &u.loginState);
+
+        // 2. Load contact count
+        file >> contactCount;
+        file.ignore();
+
+        // 3. Load each contact
+        u.contact.clear();
+        for (int i = 0; i < contactCount; i++) {
+            User c;
+            getline(file, line);
+            // Parse: id|name|phone
+            size_t p1 = line.find('|');
+            size_t p2 = line.find('|', p1 + 1);
+
+            c.id = stoi(line.substr(0, p1));
+            c.name = line.substr(p1 + 1, p2 - p1 - 1);
+            c.phone = line.substr(p2 + 1);
+
+            u.contact.push_back(c);
+        }
+        cout << "Data loaded from " << filename << endl;
+        return u;
     }
 };
 

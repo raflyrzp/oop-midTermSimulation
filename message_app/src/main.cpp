@@ -1,207 +1,174 @@
 #include <iostream>
 #include "User.h"
+#include <vector>
+#include <fstream>
 
 using namespace std;
 
-enum PrimaryPrompt
-{
-    REGISTER,
-    LOGIN,
-    EXIT,
-    MAIN_PROMPT
-};
-enum SubLoginPrompt
-{
-    USER_VERIFICATION,
-    LOGIN_MENU
-};
-enum FeaturePrompt
-{
-    WHOAMI,
-    LIST_CONTACT,
-    ADD_CONTACT,
-    SEEK_CONTACT,
-    LOGOUT,
-    LOGIN_MENU_PROMPT
-};
+enum PrimaryPrompt { REGISTER, LOGIN, EXIT, MAIN_PROMPT };
+enum SubLoginPrompt { USER_VERIFICATION, LOGIN_MENU };
+enum FeaturePrompt { WHOAMI, LIST_CONTACT, ADD_CONTACT, SEEK_CONTACT, DELETE_CONTACT, LOGOUT, LOGIN_MENU_PROMPT };
 
-void editPrompt(User &newUser, int id)
-{
-    cout << "Do you want to edit the contact with id " << id << "? (y/n): ";
-    char choice;
-    cin >> choice;
-    if (choice == 'n' || choice == 'N')
-    {
+const string SAVE_FILE = "users.txt";
+
+// Simpan semua user ke file
+void saveAllUsers(const vector<User>& users) {
+    ofstream file(SAVE_FILE);
+    if (!file) {
+        cerr << "Failed to save data!" << endl;
         return;
     }
-    cout << endl;
+    file << users.size() << "\n";
+    for (const auto& user : users) {
+        user.saveToFile("temp_user.txt");
 
-    string name, phone;
-    cout << "Enter new name: ";
-    cin >> name;
-    cout << "Enter new phone: ";
-    cin >> phone;
-    newUser.updateContact(id, User(name, phone));
-
-    cout << "Contact updated successfully!" << endl;
-    return;
+        ifstream temp("temp_user.txt");
+        string line;
+        while (getline(temp, line)) {
+            file << line << "\n";
+        }
+        file << "END_USER\n";
+    }
+    cout << "All users saved successfully!" << endl;
 }
 
-int main()
-{
+// Load semua user dari file
+vector<User> loadAllUsers() {
+    vector<User> users;
+    ifstream file(SAVE_FILE);
+    if (!file) return users;
+
+    int totalUsers;
+    file >> totalUsers;
+    file.ignore();
+
+    for (int i = 0; i < totalUsers; i++) {
+        ofstream temp("temp_user.txt");
+        string line;
+        while (getline(file, line) && line != "END_USER") {
+            temp << line << "\n";
+        }
+        temp.close();
+
+        users.push_back(User::loadFromFile("temp_user.txt"));
+    }
+    cout << "Loaded " << users.size() << " users from file." << endl;
+    return users;
+}
+
+int main() {
     cout << "Welcome to the Message App" << endl;
+
     PrimaryPrompt prompt = MAIN_PROMPT;
     SubLoginPrompt subLoginPrompt = USER_VERIFICATION;
     FeaturePrompt featurePrompt = WHOAMI;
 
-    const string serialname = "user_data.bin";
+    vector<User> users = loadAllUsers(); // load dari file
     User currentUser;
-    vector<User> users;
 
-    while (true)
-    {
-        switch (prompt)
-        {
-        case MAIN_PROMPT:
-            cout << "Main Menu:" << endl;
+    while (true) {
+        switch (prompt) {
+        case MAIN_PROMPT: {
+            cout << "\n--- Main Menu ---" << endl;
             cout << "1. Register" << endl;
             cout << "2. Login" << endl;
             cout << "3. Exit" << endl;
-            cout << "Enter your choice: ";
+            cout << "Enter choice: ";
             int mainChoice;
             cin >> mainChoice;
             prompt = static_cast<PrimaryPrompt>(mainChoice - 1);
             break;
-        case REGISTER:
-        {
+        }
+        case REGISTER: {
             string name, phone;
             cout << "Enter your name: ";
             cin >> name;
-            cout << "Enter your phone number: ";
+            cout << "Enter your phone: ";
             cin >> phone;
-            User newUser(name, phone);
-            users.push_back(newUser);
-            cout << "Registration successful! welcome " << name << endl;
+            users.emplace_back(users.size() + 1, name, phone);
+            cout << "Registration successful!" << endl;
             prompt = MAIN_PROMPT;
             break;
         }
         case LOGIN:
-            switch (subLoginPrompt)
-            {
-            case USER_VERIFICATION:
-            {
+            switch (subLoginPrompt) {
+            case USER_VERIFICATION: {
                 string name, phone;
-                cout << "Enter your name: ";
+                cout << "Enter name: ";
                 cin >> name;
-                cout << "Enter your phone number: ";
+                cout << "Enter phone: ";
                 cin >> phone;
+
                 bool userExist = false;
-                for (auto &u : users)
-                {
-                    if (u.getName() == name && u.getPhone() == phone)
-                    {
+                for (auto &u : users) {
+                    if (u.getName() == name && u.getPhone() == phone) {
                         currentUser = u;
+                        currentUser.setLoginState(1);
+                        subLoginPrompt = LOGIN_MENU;
                         userExist = true;
                         break;
                     }
                 }
-
-                if (userExist)
-                {
-                    cout << "Login successful! welcome " << currentUser.getName() << endl;
-                    currentUser.setLoginState(1);
-                    subLoginPrompt = LOGIN_MENU;
-                    prompt = LOGIN;
-                }
-                else
-                {
-                    cout << "User not found. Please register first." << endl;
+                if (!userExist) {
+                    cout << "User not found!" << endl;
                     prompt = MAIN_PROMPT;
-                    subLoginPrompt = USER_VERIFICATION;
                 }
                 break;
             }
             case LOGIN_MENU:
-                cout << "Login Menu:" << endl;
+                cout << "\n--- Login Menu ---" << endl;
                 cout << "1. Who Am I" << endl;
                 cout << "2. List Contacts" << endl;
                 cout << "3. Add Contact" << endl;
                 cout << "4. Seek Contact" << endl;
                 cout << "5. Logout" << endl;
-                cout << "Enter your choice: ";
+                cout << "Enter choice: ";
                 int loginChoice;
                 cin >> loginChoice;
                 featurePrompt = static_cast<FeaturePrompt>(loginChoice - 1);
-                switch (featurePrompt)
-                {
-                case WHOAMI:
-                    cout << "User Name: " << currentUser.getName() << endl;
-                    cout << "User Phone: " << currentUser.getPhone() << endl;
-                    break;
-                case LIST_CONTACT:
+
+                if (featurePrompt == WHOAMI) {
+                    cout << "Name: " << currentUser.getName() << ", Phone: " << currentUser.getPhone() << endl;
+                } 
+                else if (featurePrompt == LIST_CONTACT) {
                     currentUser.printContact();
-                    break;
-                case ADD_CONTACT:
+                } 
+                else if (featurePrompt == ADD_CONTACT) {
                     currentUser.addContactPrompt();
-                    break;
-                case SEEK_CONTACT:
-                {
+                } 
+                else if (featurePrompt == SEEK_CONTACT) {
                     string phone;
-                    cout << "Enter contact phone to seek: ";
+                    cout << "Enter phone: ";
                     cin >> phone;
-                    bool found = false;
-                    for (auto &c : currentUser.getContact())
-                    {
-                        if (c.getPhone() == phone)
-                        {
-                            cout << "Contact found: " << c.getName() << " - " << c.getPhone() << endl;
-                            found = true;
-                            break;
-                        }
+                    User found = currentUser.seekContact(phone);
+                    if (found.getPhone() != "") {
+                        cout << "Found: " << found.getName() << " - " << found.getPhone() << endl;
+                    } else {
+                        cout << "No contact with that number." << endl;
                     }
-                    if (!found)
-                    {
-                        cout << "Contact not found." << endl;
+                } else if (featurePrompt == DELETE_CONTACT) {
+                    string phone;
+                    cout << "Enter phone of contact to delete: ";
+                    cin >> phone;
+                    User toDelete = currentUser.seekContact(phone);
+                    if (toDelete.getPhone() != "") {
+                        currentUser.deleteContact(toDelete.getId());
+                    } else {
+                        cout << "No contact with that number." << endl;
                     }
-                    break;
                 }
-                case LOGOUT:
+                else if (featurePrompt == LOGOUT) {
                     currentUser.setLoginState(0);
-                    cout << "Logged out successfully." << endl;
-                    prompt = MAIN_PROMPT;
                     subLoginPrompt = USER_VERIFICATION;
-                    break;
-                default:
-                    cout << "Invalid choice." << endl;
-                    break;
+                    prompt = MAIN_PROMPT;
                 }
                 break;
             }
             break;
         case EXIT:
+            saveAllUsers(users);
             cout << "Goodbye!" << endl;
             return 0;
-        default:
-            cout << "Invalid choice." << endl;
-            break;
-        }
-
-        if (prompt == MAIN_PROMPT)
-        {
-            if (currentUser.getLoginState() == 1)
-            {
-                cout << "Do you want to logout? (y/n): ";
-                char choice;
-                cin >> choice;
-                if (choice == 'y' || choice == 'Y')
-                {
-                    currentUser.setLoginState(0);
-                    cout << "Logged out successfully." << endl;
-                    prompt = MAIN_PROMPT;
-                    subLoginPrompt = USER_VERIFICATION;
-                }
-            }
         }
     }
-    return 0;
 }
