@@ -1,0 +1,4 @@
+username|password|fullName|isSeller
+udin|udin|udin lengkap|0
+rafly|rafly|rafly rabbany|1
+username|password|fullName|0

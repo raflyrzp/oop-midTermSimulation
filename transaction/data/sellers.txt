@@ -1,0 +1,3 @@
+username|shopName
+rafly|voynt
+username|shopName

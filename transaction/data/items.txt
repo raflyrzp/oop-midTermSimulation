@@ -1,0 +1,3 @@
+id|seller|name|description|price|stock|visible
+1|rafly|mouse|buat cursor|50000|58|1
+id|seller|name|description|0|0|0

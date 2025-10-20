@@ -1,0 +1,52 @@
+#pragma once
+
+enum PrimaryPrompt
+{
+    LOGIN,
+    REGISTER,
+    STORE_ANALYTICS,
+    EXIT
+};
+
+enum BuyerMenu
+{
+    CHECK_ACCOUNT,
+    UPGRADE_SELLER,
+    BANK_FUNCTIONS,
+    BROWSE_SHOP,
+    VIEW_CART,
+    CHECKOUT,
+    MANAGE_ORDERS,
+    VIEW_SPENDING,
+    SELLER_MODE,
+    LOGOUT_BUYER
+};
+
+enum BankMenu
+{
+    CHECK_BALANCE,
+    BANK_DEPOSIT,
+    BANK_WITHDRAW,
+    VIEW_TRANSACTIONS,
+    BACK_TO_BUYER
+};
+
+enum SellerMenu
+{
+    MANAGE_INVENTORY,
+    VIEW_SELLER_ANALYTICS,
+    VIEW_INCOMING_ORDERS,
+    BACK_TO_BUYER_MENU
+};
+
+enum SellerInventoryMenu
+{
+    VIEW_INVENTORY,
+    ADD_ITEM,
+    UPDATE_ITEM,
+    SET_PRICE,
+    REPLENISH_STOCK,
+    DISCARD_STOCK,
+    TOGGLE_ITEM_VISIBILITY,
+    BACK_TO_MAIN_MENU
+};

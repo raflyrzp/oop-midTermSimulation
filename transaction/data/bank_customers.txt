@@ -1,0 +1,4 @@
+accountId|username|fullNameIgnored|balance
+2|udin|-|9.99e+07
+1|rafly|-|100000
+accountId|username|-|0

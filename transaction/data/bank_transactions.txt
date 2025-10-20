@@ -1,0 +1,6 @@
+id|timestamp|username|type|amount|counterparty|note
+id|timestamp|username|type|0|counterparty|note
+id|timestamp|username|type|0|counterparty|note
+1|2025-10-20 02:40:44|udin|DEPOSIT|1e+08|-|User deposit
+2|2025-10-20 02:41:49|udin|TRANSFER_OUT|100000|rafly|Payment for order
+3|2025-10-20 02:41:49|rafly|TRANSFER_IN|100000|udin|Payment for order
