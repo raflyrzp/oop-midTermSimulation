@@ -5,26 +5,49 @@
 
 using namespace std;
 
-enum PrimaryPrompt { REGISTER, LOGIN, EXIT, MAIN_PROMPT };
-enum SubLoginPrompt { USER_VERIFICATION, LOGIN_MENU };
-enum FeaturePrompt { WHOAMI, LIST_CONTACT, ADD_CONTACT, SEEK_CONTACT, DELETE_CONTACT, LOGOUT, LOGIN_MENU_PROMPT };
+enum PrimaryPrompt
+{
+    REGISTER,
+    LOGIN,
+    EXIT,
+    MAIN_PROMPT
+};
+enum SubLoginPrompt
+{
+    USER_VERIFICATION,
+    LOGIN_MENU
+};
+enum FeaturePrompt
+{
+    WHOAMI,
+    LIST_CONTACT,
+    ADD_CONTACT,
+    SEEK_CONTACT,
+    DELETE_CONTACT,
+    LOGOUT,
+    LOGIN_MENU_PROMPT
+};
 
 const string SAVE_FILE = "users.txt";
 
 // Simpan semua user ke file
-void saveAllUsers(const vector<User>& users) {
+void saveAllUsers(const vector<User> &users)
+{
     ofstream file(SAVE_FILE);
-    if (!file) {
+    if (!file)
+    {
         cerr << "Failed to save data!" << endl;
         return;
     }
     file << users.size() << "\n";
-    for (const auto& user : users) {
+    for (const auto &user : users)
+    {
         user.saveToFile("temp_user.txt");
 
         ifstream temp("temp_user.txt");
         string line;
-        while (getline(temp, line)) {
+        while (getline(temp, line))
+        {
             file << line << "\n";
         }
         file << "END_USER\n";
@@ -33,19 +56,23 @@ void saveAllUsers(const vector<User>& users) {
 }
 
 // Load semua user dari file
-vector<User> loadAllUsers() {
+vector<User> loadAllUsers()
+{
     vector<User> users;
     ifstream file(SAVE_FILE);
-    if (!file) return users;
+    if (!file)
+        return users;
 
     int totalUsers;
     file >> totalUsers;
     file.ignore();
 
-    for (int i = 0; i < totalUsers; i++) {
+    for (int i = 0; i < totalUsers; i++)
+    {
         ofstream temp("temp_user.txt");
         string line;
-        while (getline(file, line) && line != "END_USER") {
+        while (getline(file, line) && line != "END_USER")
+        {
             temp << line << "\n";
         }
         temp.close();
@@ -56,7 +83,8 @@ vector<User> loadAllUsers() {
     return users;
 }
 
-int main() {
+int main()
+{
     cout << "Welcome to the Message App" << endl;
 
     PrimaryPrompt prompt = MAIN_PROMPT;
@@ -66,9 +94,12 @@ int main() {
     vector<User> users = loadAllUsers(); // load dari file
     User currentUser;
 
-    while (true) {
-        switch (prompt) {
-        case MAIN_PROMPT: {
+    while (true)
+    {
+        switch (prompt)
+        {
+        case MAIN_PROMPT:
+        {
             cout << "\n--- Main Menu ---" << endl;
             cout << "1. Register" << endl;
             cout << "2. Login" << endl;
@@ -79,7 +110,8 @@ int main() {
             prompt = static_cast<PrimaryPrompt>(mainChoice - 1);
             break;
         }
-        case REGISTER: {
+        case REGISTER:
+        {
             string name, phone;
             cout << "Enter your name: ";
             cin >> name;
@@ -91,8 +123,10 @@ int main() {
             break;
         }
         case LOGIN:
-            switch (subLoginPrompt) {
-            case USER_VERIFICATION: {
+            switch (subLoginPrompt)
+            {
+            case USER_VERIFICATION:
+            {
                 string name, phone;
                 cout << "Enter name: ";
                 cin >> name;
@@ -100,8 +134,10 @@ int main() {
                 cin >> phone;
 
                 bool userExist = false;
-                for (auto &u : users) {
-                    if (u.getName() == name && u.getPhone() == phone) {
+                for (auto &u : users)
+                {
+                    if (u.getName() == name && u.getPhone() == phone)
+                    {
                         currentUser = u;
                         currentUser.setLoginState(1);
                         subLoginPrompt = LOGIN_MENU;
@@ -109,7 +145,8 @@ int main() {
                         break;
                     }
                 }
-                if (!userExist) {
+                if (!userExist)
+                {
                     cout << "User not found!" << endl;
                     prompt = MAIN_PROMPT;
                 }
@@ -121,43 +158,57 @@ int main() {
                 cout << "2. List Contacts" << endl;
                 cout << "3. Add Contact" << endl;
                 cout << "4. Seek Contact" << endl;
-                cout << "5. Logout" << endl;
+                cout << "5. Delete Contact" << endl;
+                cout << "6. Logout" << endl;
                 cout << "Enter choice: ";
                 int loginChoice;
                 cin >> loginChoice;
                 featurePrompt = static_cast<FeaturePrompt>(loginChoice - 1);
 
-                if (featurePrompt == WHOAMI) {
+                if (featurePrompt == WHOAMI)
+                {
                     cout << "Name: " << currentUser.getName() << ", Phone: " << currentUser.getPhone() << endl;
-                } 
-                else if (featurePrompt == LIST_CONTACT) {
+                }
+                else if (featurePrompt == LIST_CONTACT)
+                {
                     currentUser.printContact();
-                } 
-                else if (featurePrompt == ADD_CONTACT) {
+                }
+                else if (featurePrompt == ADD_CONTACT)
+                {
                     currentUser.addContactPrompt();
-                } 
-                else if (featurePrompt == SEEK_CONTACT) {
+                }
+                else if (featurePrompt == SEEK_CONTACT)
+                {
                     string phone;
                     cout << "Enter phone: ";
                     cin >> phone;
                     User found = currentUser.seekContact(phone);
-                    if (found.getPhone() != "") {
+                    if (found.getPhone() != "")
+                    {
                         cout << "Found: " << found.getName() << " - " << found.getPhone() << endl;
-                    } else {
+                    }
+                    else
+                    {
                         cout << "No contact with that number." << endl;
                     }
-                } else if (featurePrompt == DELETE_CONTACT) {
+                }
+                else if (featurePrompt == DELETE_CONTACT)
+                {
                     string phone;
                     cout << "Enter phone of contact to delete: ";
                     cin >> phone;
                     User toDelete = currentUser.seekContact(phone);
-                    if (toDelete.getPhone() != "") {
+                    if (toDelete.getPhone() != "")
+                    {
                         currentUser.deleteContact(toDelete.getId());
-                    } else {
+                    }
+                    else
+                    {
                         cout << "No contact with that number." << endl;
                     }
                 }
-                else if (featurePrompt == LOGOUT) {
+                else if (featurePrompt == LOGOUT)
+                {
                     currentUser.setLoginState(0);
                     subLoginPrompt = USER_VERIFICATION;
                     prompt = MAIN_PROMPT;

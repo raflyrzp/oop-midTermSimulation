@@ -164,11 +164,12 @@ public:
         cout << "Contact not found." << endl;
     }
 
-     // ========== SAVE TO FILE ==========
+    // ========== SAVE TO FILE ==========
     void saveToFile(const string &filename) const
     {
         ofstream file(filename);
-        if (!file) {
+        if (!file)
+        {
             cerr << "Error opening file for writing!\n";
             return;
         }
@@ -180,50 +181,62 @@ public:
         file << contact.size() << "\n";
 
         // Save each contact
-        for (const auto &c : contact) {
+        for (const auto &c : contact)
+        {
             file << c.id << "|" << c.name << "|" << c.phone << "\n";
         }
-
-        cout << "Data saved to " << filename << endl;
     }
 
     // ========== LOAD FROM FILE ==========
     static User loadFromFile(const string &filename)
     {
         ifstream file(filename);
-        if (!file) {
+        if (!file)
+        {
             cerr << "Error opening file for reading!\n";
             return User();
         }
 
         User u;
         string line;
-        int contactCount;
 
-        // 1. Load main user data
-        getline(file, line);
-        sscanf(line.c_str(), "%d|%[^|]|%[^|]|%d", &u.id, u.name.data(), u.phone.data(), &u.loginState);
+        // ----- Load main user -----
+        if (!getline(file, line))
+        {
+            cerr << "File is empty or corrupted!\n";
+            return User();
+        }
 
-        // 2. Load contact count
+        size_t p1 = line.find('|');
+        size_t p2 = line.find('|', p1 + 1);
+        size_t p3 = line.find('|', p2 + 1);
+
+        u.id = stoi(line.substr(0, p1));
+        u.name = line.substr(p1 + 1, p2 - p1 - 1);
+        u.phone = line.substr(p2 + 1, p3 - p2 - 1);
+        u.loginState = stoi(line.substr(p3 + 1));
+
+        // ----- Load contacts -----
+        int contactCount = 0;
         file >> contactCount;
         file.ignore();
 
-        // 3. Load each contact
         u.contact.clear();
-        for (int i = 0; i < contactCount; i++) {
-            User c;
+        for (int i = 0; i < contactCount; i++)
+        {
             getline(file, line);
-            // Parse: id|name|phone
-            size_t p1 = line.find('|');
-            size_t p2 = line.find('|', p1 + 1);
 
-            c.id = stoi(line.substr(0, p1));
-            c.name = line.substr(p1 + 1, p2 - p1 - 1);
-            c.phone = line.substr(p2 + 1);
+            size_t a = line.find('|');
+            size_t b = line.find('|', a + 1);
+
+            User c;
+            c.id = stoi(line.substr(0, a));
+            c.name = line.substr(a + 1, b - a - 1);
+            c.phone = line.substr(b + 1);
 
             u.contact.push_back(c);
         }
-        cout << "Data loaded from " << filename << endl;
+
         return u;
     }
 };
